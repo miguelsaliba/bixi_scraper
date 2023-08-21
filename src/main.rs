@@ -3,6 +3,7 @@ mod models;
 mod schema;
 
 use diesel::prelude::*;
+use log::{error, info};
 use models::StationStatus;
 use serde::Deserialize;
 use std::time::Duration;
@@ -22,6 +23,8 @@ struct L2 {
 
 #[tokio::main]
 async fn main() {
+    env_logger::init();
+
     let forever = task::spawn(async {
         let mut interval = time::interval(Duration::from_secs(15 * 60));
 
@@ -30,8 +33,8 @@ async fn main() {
             let stations = fetch_station_status().await;
             let result = save_status_to_db(stations).await;
             match result {
-                Ok(num) => println!("{:?} : {}", chrono::offset::Local::now(), num),
-                Err(err) => eprintln!("{:?}", err),
+                Ok(num) => info!("{} records inserted.", num),
+                Err(err) => error!("{:?}", err),
             }
         }
     });
